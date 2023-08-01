@@ -101,7 +101,7 @@ void remove_last(Area *area, Register *reg) {
   area->cell_displacement--;
 }
 
-void read_file(FILE **file, Register *reg, int *displacement,
+void read_file(FILE **file, Register *reg, size_t *displacement,
                bool *must_read_left) {
   fread(reg, sizeof(Register), 1, *file);
 
@@ -146,13 +146,13 @@ void insert_in_area(Area *area, Register *reg, int *area_nr) {
 void partition(FILE **read_inf_file, FILE **write_inf_file,
                FILE **read_write_file, Area area, int left, int right, int *i,
                int *j) {
-  int read_sup_dis = right;
+  size_t read_sup_dis = right;
   size_t write_sup_dis = right;
-  int read_inf_dis = left;
+  size_t read_inf_dis = left;
   size_t write_inf_dis = left;
   int area_nr = 0;
-  int inf_limit = INT_MIN;
-  int sup_limit = INT_MAX;
+  size_t inf_limit = INT_MIN;
+  size_t sup_limit = INT_MAX;
 
   bool must_read_left = true;
   Register last_read;
