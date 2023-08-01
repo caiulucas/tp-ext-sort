@@ -38,3 +38,11 @@ typedef struct Input {
   Method method;
   Situation situation;
 } Input;
+
+// Perfomance struct to measure reads, comparisons and execution time in a
+// function
+typedef struct Perfomance {
+  size_t reads_count;
+  size_t comparisons_count;
+  double execution_time;
+} Perfomance;
