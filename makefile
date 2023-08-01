@@ -18,6 +18,7 @@ $(TARGET): $(OBJECTS)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(@D)
+	@mkdir -p tmp
 	@$(CC) -c $< -o $@ $(CFLAGS)
 
 clean: 
@@ -25,4 +26,4 @@ clean:
 	@echo "Cleanup complete"
 
 run: $(TARGET)
-	@./$(TARGET)
+	@./$(TARGET) 1 1000 3
