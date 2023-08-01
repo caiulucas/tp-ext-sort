@@ -1,11 +1,40 @@
 #pragma once
 
-#define AVAILABLE_TAPES 20
+#include <stdio.h>
 
+#define AVAILABLE_TAPES 40
+#define FILENAME_LENGTH 15
+#define MAX_BLOCK_SIZE 20
+
+#define CONTENT_MAX_SIZE 85
+
+// Represents a method of sorting (internal intercalation, external
+// intercalation or quick sort)
+typedef enum Method {
+  INTERNAL_INTERCALATION = 1,
+  EXTERNAL_INTERCALATION = 2,
+  QUICK_SORT = 3,
+} Method;
+
+// Represents the file situation (ascending, descending or random)
+typedef enum Situation { ASC = 1, DESC = 2, RANDOM = 3 } Situation;
+
+// Represents a register of a file
 typedef struct Register {
-  int id;
-  float grade;
-  char state[3];
-  char city[51];
-  char course[31];
+  size_t id;
+  double grade;
+  char content[CONTENT_MAX_SIZE];
 } Register;
+
+// Represents a block of registers
+typedef struct Block {
+  Register *registers;
+  size_t registers_count;
+} Block;
+
+// Represents the arguments of the program
+typedef struct Input {
+  size_t quantity;
+  Method method;
+  Situation situation;
+} Input;
