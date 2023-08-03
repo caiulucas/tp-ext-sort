@@ -1,4 +1,6 @@
 #include "quick-sort.h"
+#include "../utils/status-messages.h"
+#include <float.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -19,128 +21,85 @@ void empty_area(Area *area) {
 }
 
 void insert_register(Area *area, Register *reg) {
-  if (area->used_cells == AREA_SZ) {
-    printf("Memória cheia");
+  if (area->used_cells >= AREA_SZ) {
+    error_msg("Memory overflow.");
     return;
   }
 
-  size_t displacement = area->cell_displacement;
-  area->cell_displacement = area->cells[displacement].next;
-  area->cells[displacement].reg = *reg;
-  area->used_cells++;
+  size_t insertion_point = area->cell_displacement;
 
-  if (area->used_cells == 1) {
-    area->first = displacement;
-    area->last = displacement;
-    area->cells[displacement].next = 0;
-    area->cells[displacement].prev = 0;
-    return;
+  for (size_t i = 0; i < area->used_cells; i++) {
+    if (area->cells[i].reg.grade > reg->grade)
+      break;
+
+    insertion_point++;
   }
 
-  size_t pos = area->first;
+  for (size_t i = area->used_cells - 1; i >= insertion_point; i--)
+    area->cells[i + 1] = area->cells[i];
 
-  if (reg->grade < area->cells[pos].reg.grade) {
-    area->cells[displacement].prev = 0;
-    area->cells[displacement].next = pos;
-    area->first = displacement;
-    return;
-  }
+  area->cells[insertion_point].reg = *reg;
+  area->used_cells += 1;
+}
 
-  size_t insertion_index = area->cells[pos].next;
+void insert_in_area(Area *area, Register *reg, size_t *used_cells) {
+  insert_register(area, reg);
+  *used_cells = area->used_cells;
+}
 
-  while (insertion_index != 0 &&
-         area->cells[insertion_index].reg.grade < reg->grade) {
-    pos = insertion_index;
-    insertion_index = area->cells[pos].next;
-  }
+void write_max(FILE **file, Register reg, size_t *displacement) {
+  fseek(*file, (*displacement - 1) * sizeof(Register), SEEK_SET);
+  fwrite(&reg, sizeof(Register), 1, *file);
+  *displacement -= 1;
+}
 
-  if (!insertion_index) {
-    area->cells[displacement].prev = pos;
-    area->cells[displacement].next = 0;
-    area->cells[pos].next = displacement;
-    area->last = displacement;
-    return;
-  }
-
-  area->cells[displacement].prev = pos;
-  area->cells[displacement].next = area->cells[pos].next;
-  area->cells[pos].next = displacement;
-  pos = area->cells[displacement].next;
-  area->cells[pos].prev = displacement;
+void write_min(FILE **file, Register reg, size_t *displacement) {
+  fwrite(&reg, sizeof(Register), 1, *file);
+  (*displacement)++;
 }
 
 void remove_first(Area *area, Register *reg) {
-  if (!area->used_cells)
-    return;
+  *reg = area->cells[0].reg;
 
-  *reg = area->cells[area->first].reg;
-  ptr_t next_temp = area->cells[area->first].next;
+  for (size_t i = 0; i < area->used_cells - 1; i++) {
+    area->cells[i] = area->cells[i + 1];
+  }
 
-  area->cells[area->first].next = area->cell_displacement;
-  area->cell_displacement = area->first;
-  area->first = next_temp;
-
-  if (area->first < AREA_SZ)
-    area->cells[area->first].prev = 0;
-  area->cell_displacement--;
+  (area->used_cells)--;
 }
 
 void remove_last(Area *area, Register *reg) {
-  if (!area->used_cells)
-    return;
-
-  *reg = area->cells[area->last].reg;
-  ptr_t prev_temp = area->cells[area->last].prev;
-
-  area->cells[area->last].next = area->cell_displacement;
-  area->cell_displacement = area->last;
-  area->last = prev_temp;
-
-  if (area->last < AREA_SZ)
-    area->cells[area->last].next = 0;
-  area->cell_displacement--;
+  *reg = area->cells[area->used_cells - 1].reg;
+  (area->used_cells)--;
 }
 
-void read_file(FILE **file, Register *reg, size_t *displacement,
-               bool *must_read_left) {
+void remove_min(Area *area, Register *reg, size_t *used_cells) {
+  remove_first(area, reg);
+  *used_cells = area->used_cells;
+}
+
+void remove_max(Area *area, Register *reg, size_t *used_cells) {
+  remove_last(area, reg);
+  *used_cells = area->used_cells;
+}
+
+void read_sup(FILE **file, Register *reg, size_t *displacement,
+              bool *must_read_left) {
+
+  fseek(*file, (*displacement - 1) * sizeof(Register), SEEK_SET);
   fread(reg, sizeof(Register), 1, *file);
 
-  if (!must_read_left) {
-    *displacement += 1;
-    *must_read_left = true;
-  } else {
-    *displacement -= 1;
-    *must_read_left = false;
-  }
+  (*displacement)--;
+  *must_read_left = true;
 }
 
-void write_file(FILE **file, Register reg, size_t *displacement,
-                bool is_displacement_sup) {
-  fseek(*file, (*displacement - 1) * sizeof(Register), SEEK_SET);
-  fwrite(&reg, sizeof(Register), 1, *file);
+void read_inf(FILE **file, Register *reg, size_t *displacement,
+              bool *must_read_left) {
 
-  if (is_displacement_sup)
-    *displacement -= 1;
-  else
-    *displacement += 1;
-}
+  fread(reg, sizeof(Register), 1, *file);
 
-void remove_in_area(Area *area, Register *reg, int *area_nr, RemoveMode mode) {
-  switch (mode) {
-  case FIRST:
-    remove_first(area, reg);
-    break;
-  case LAST:
-    remove_last(area, reg);
-    break;
-  }
-
-  *area_nr = area->used_cells;
-}
-
-void insert_in_area(Area *area, Register *reg, int *area_nr) {
-  insert_register(area, reg);
-  *area_nr = area->used_cells;
+  (*displacement)++;
+  *must_read_left = false;
 }
 
 void partition(FILE **read_inf_file, FILE **write_inf_file,
@@ -150,11 +109,12 @@ void partition(FILE **read_inf_file, FILE **write_inf_file,
   size_t write_sup_dis = right;
   size_t read_inf_dis = left;
   size_t write_inf_dis = left;
-  int area_nr = 0;
-  size_t inf_limit = INT_MIN;
-  size_t sup_limit = INT_MAX;
 
-  bool must_read_left = true;
+  size_t used_cells = 0;
+  double inf_limit = DBL_MIN;
+  double sup_limit = DBL_MAX;
+
+  bool must_read_left = false;
   Register last_read;
   Register aux;
 
@@ -165,56 +125,57 @@ void partition(FILE **read_inf_file, FILE **write_inf_file,
   *j = right + 1;
 
   while (read_sup_dis >= read_inf_dis) {
-    if (area_nr < AREA_SZ - 1) {
+    if (used_cells < AREA_SZ - 1) {
       if (must_read_left)
-        read_file(read_write_file, &last_read, &read_inf_dis, &must_read_left);
+        read_inf(read_write_file, &last_read, &read_inf_dis, &must_read_left);
       else
-        read_file(read_write_file, &last_read, &read_sup_dis, &must_read_left);
+        read_sup(read_write_file, &last_read, &read_sup_dis, &must_read_left);
 
       continue;
     }
 
     if (read_sup_dis == write_sup_dis)
-      read_file(read_write_file, &last_read, &read_sup_dis, &must_read_left);
+      read_sup(read_write_file, &last_read, &read_sup_dis, &must_read_left);
     else if (read_inf_dis == write_inf_dis)
-      read_file(read_write_file, &last_read, &read_inf_dis, &must_read_left);
+      read_inf(read_write_file, &last_read, &read_inf_dis, &must_read_left);
     else if (must_read_left)
-      read_file(read_write_file, &last_read, &read_sup_dis, &must_read_left);
+      read_inf(read_write_file, &last_read, &read_inf_dis, &must_read_left);
     else
-      read_file(read_write_file, &last_read, &read_inf_dis, &must_read_left);
+      read_sup(read_write_file, &last_read, &read_sup_dis, &must_read_left);
 
-    if (last_read.id > sup_limit) {
-      *j = write_sup_dis;
-      write_file(read_write_file, last_read, &write_sup_dis, true);
-      continue;
-    }
-    if (last_read.id < inf_limit) {
+    if (last_read.grade <= inf_limit) {
       *i = write_inf_dis;
-      write_file(read_write_file, last_read, &write_inf_dis, false);
+      write_min(read_write_file, last_read, &write_inf_dis);
       continue;
     }
 
-    insert_in_area(&area, &last_read, &area_nr);
+    if (last_read.grade >= sup_limit) {
+      *j = write_sup_dis;
+      write_max(read_write_file, last_read, &write_sup_dis);
+      continue;
+    }
+
+    insert_in_area(&area, &last_read, &used_cells);
 
     if (write_inf_dis <= write_sup_dis) {
-      // remove_min(&area, &reg, &area_nr);
-      write_file(read_write_file, aux, &write_inf_dis, false);
-      inf_limit = aux.id;
+      remove_min(&area, &aux, &used_cells);
+      write_min(read_write_file, aux, &write_inf_dis);
+      inf_limit = aux.grade;
     } else {
-      // remove_max(&area, &reg, &area_nr);
-      write_file(read_write_file, aux, &write_sup_dis, true);
-      sup_limit = aux.id;
+      remove_max(&area, &aux, &used_cells);
+      write_max(read_write_file, aux, &write_sup_dis);
+      sup_limit = aux.grade;
     }
   }
 
   while (write_inf_dis <= write_sup_dis) {
-    // remove_min(&area, &reg, &area_nr);
-    write_file(read_write_file, aux, &write_inf_dis, false);
+    remove_min(&area, &aux, &used_cells);
+    write_max(read_write_file, aux, &write_inf_dis);
   }
 }
 
-void ext_quick_sort(FILE **li_file, FILE **ei_file, FILE **les_file, int left,
-                    int right) {
+void quick_sort(FILE **li_file, FILE **ei_file, FILE **les_file, int left,
+                int right) {
   if (right - left < 1)
     return;
 
@@ -225,11 +186,32 @@ void ext_quick_sort(FILE **li_file, FILE **ei_file, FILE **les_file, int left,
   empty_area(&area);
   partition(li_file, ei_file, les_file, area, left, right, &i, &j);
 
+  fflush(*li_file);
+  fflush(*ei_file);
+  fflush(*les_file);
+
   if (i - left < right - j) {
-    ext_quick_sort(li_file, ei_file, les_file, left, i);
-    ext_quick_sort(li_file, ei_file, les_file, j, right);
+    quick_sort(li_file, ei_file, les_file, left, i);
+    quick_sort(li_file, ei_file, les_file, j, right);
   } else {
-    ext_quick_sort(li_file, ei_file, les_file, j, right);
-    ext_quick_sort(li_file, ei_file, les_file, left, i);
+    quick_sort(li_file, ei_file, les_file, j, right);
+    quick_sort(li_file, ei_file, les_file, left, i);
   }
+}
+
+void ext_quick_sort(char const *filename, size_t size) {
+  FILE *file_1 = fopen(filename, "rb+");
+  FILE *file_2 = fopen(filename, "rb+");
+  FILE *file_3 = fopen(filename, "rb+");
+
+  if (!file_1 || !file_2 || !file_3) {
+    error_msg("Erro ao abrir o arquivo\n");
+    exit(1);
+  }
+
+  quick_sort(&file_1, &file_2, &file_3, 1, size);
+
+  fclose(file_1);
+  fclose(file_2);
+  fclose(file_3);
 }

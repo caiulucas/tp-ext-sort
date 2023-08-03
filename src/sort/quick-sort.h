@@ -21,5 +21,4 @@ typedef struct Area {
   size_t used_cells;
 } Area;
 
-void ext_quick_sort(FILE **li_file, FILE **ei_file, FILE **les_file, int left,
-                    int right);
+void ext_quick_sort(char const *filename, size_t size);
