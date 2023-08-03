@@ -3,7 +3,7 @@
 #include "sort/quick-sort.h"
 #include "sort/tapes.h"
 #include "utils/file-handler.h"
-#include "utils/perfomance-handler.h"
+#include "utils/performance-handler.h"
 #include "utils/status-messages.h"
 #include <stdio.h>
 #include <stdlib.h>
