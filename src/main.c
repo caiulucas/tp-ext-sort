@@ -1,7 +1,9 @@
 #include "consts.h"
 #include "sort/merge-sort.h"
+#include "sort/quick-sort.h"
 #include "sort/tapes.h"
 #include "utils/file-handler.h"
+#include "utils/perfomance-handler.h"
 #include "utils/status-messages.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +22,22 @@ int main(int argc, char **argv) {
   input.quantity = atoi(argv[2]);
   input.situation = (Situation)atoi(argv[3]);
 
-  txt_to_bin("provao.txt", "tmp/provao.bin", input.quantity);
+  cp_file("tmp/provao.bin", "tmp/provao-cp.bin");
+  FILE *file_1 = fopen("tmp/provao-cp.bin", "rb+");
+
+  if (!file_1) {
+    error_msg("Error opening file");
+  }
+  FILE *file_2 = fopen("tmp/provao-cp.bin", "rb+");
+
+  if (!file_2) {
+    error_msg("Error opening file");
+  }
+  FILE *file_3 = fopen("tmp/provao-cp.bin", "rb+");
+
+  if (!file_3) {
+    error_msg("Error opening file");
+  }
 
   switch (input.method) {
   case INTERNAL_INTERCALATION:
@@ -30,7 +47,9 @@ int main(int argc, char **argv) {
     // TODO;
     break;
   case QUICK_SORT:
-    // TODO;
+    ext_quick_sort("tmp/provao-cp.bin", input.quantity);
+    bin_to_txt("tmp/provao-cp.bin", "out/provao-1.txt");
+    bin_to_txt("tmp/provao.bin", "out/provao.txt");
     break;
   }
 
