@@ -1,5 +1,4 @@
 #include "merge-sort.h"
-#include <stddef.h>
 #include <stdlib.h>
 
 // Merges a list of items
