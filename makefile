@@ -1,5 +1,5 @@
 CC := g++
-CFLAGS := -Wall -O3
+CFLAGS := -Wall
 
 SRCDIR := src
 BUILDDIR := build
@@ -26,4 +26,5 @@ clean:
 	@echo "Cleanup complete"
 
 run: $(TARGET)
+	@make clean
 	@./$(TARGET) 1 1000 3
