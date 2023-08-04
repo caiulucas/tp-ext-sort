@@ -22,22 +22,9 @@ int main(int argc, char **argv) {
   input.quantity = atoi(argv[2]);
   input.situation = (Situation)atoi(argv[3]);
 
+  Perfomance perfomace = {0, 0, 0};
+
   cp_file("tmp/provao.bin", "tmp/provao-cp.bin");
-  FILE *file_1 = fopen("tmp/provao-cp.bin", "rb+");
-
-  if (!file_1) {
-    error_msg("Error opening file");
-  }
-  FILE *file_2 = fopen("tmp/provao-cp.bin", "rb+");
-
-  if (!file_2) {
-    error_msg("Error opening file");
-  }
-  FILE *file_3 = fopen("tmp/provao-cp.bin", "rb+");
-
-  if (!file_3) {
-    error_msg("Error opening file");
-  }
 
   switch (input.method) {
   case INTERNAL_INTERCALATION:
@@ -48,8 +35,8 @@ int main(int argc, char **argv) {
     break;
   case QUICK_SORT:
     ext_quick_sort("tmp/provao-cp.bin", input.quantity);
-    bin_to_txt("tmp/provao-cp.bin", "out/provao-1.txt");
-    bin_to_txt("tmp/provao.bin", "out/provao.txt");
+    bin_to_txt("tmp/provao-cp.bin", "out/provao-1.txt", input.quantity,
+               &perfomace);
     break;
   }
 
