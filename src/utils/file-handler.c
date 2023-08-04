@@ -80,7 +80,27 @@ void print_bin(char const *filename) {
   fclose(bin_file);
 }
 
-bool bin_to_txt(char const *bin_filename, char const *txt_filename) {
+bool delete_file(char const *filename) {
+  if (remove(filename) != 0) {
+    char msg[100];
+    sprintf(msg, "Failed to remove %s.", filename);
+    error_msg(msg);
+    return false;
+  }
+
+  char msg[100];
+  sprintf(msg, "%s was removed.\n", filename);
+  info_msg(msg);
+  return true;
+}
+
+bool bin_to_txt(char const *bin_filename, char const *txt_filename, size_t size,
+                Perfomance *perfomance) {
+  clock_t start_clock = clock();
+
+  if (!delete_file(txt_filename))
+    return false;
+
   FILE *bin_file = fopen(bin_filename, "rb");
 
   if (!bin_file) {
@@ -95,9 +115,13 @@ bool bin_to_txt(char const *bin_filename, char const *txt_filename) {
     return false;
   }
 
-  while (!feof(bin_file)) {
+  for (size_t i = 0; i < size; i++) {
+    if (feof(bin_file))
+      break;
+
     Register reg;
     fread(&reg, sizeof(Register), 1, bin_file);
+    perfomance->reads_count++;
     fprintf(txt_file, "%zu %.1lf %s\n", reg.id, reg.grade, reg.content);
   }
 
@@ -108,6 +132,9 @@ bool bin_to_txt(char const *bin_filename, char const *txt_filename) {
   sprintf(msg, "File %s created successfuly\n", txt_filename);
   success_msg(msg);
 
+  clock_t end_clock = clock();
+  perfomance->execution_time +=
+      ((double)(end_clock - start_clock)) / CLOCKS_PER_SEC;
   return true;
 }
 
