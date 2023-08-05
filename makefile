@@ -4,7 +4,7 @@ CFLAGS := -Wall -Wextra -Werror -O3 -pthread
 SRCDIR := src
 BUILDDIR := build
 
-TARGET := exe
+TARGET := ordena
 SOURCES := $(wildcard $(SRCDIR)/*.c $(SRCDIR)/*/*.c)
 OBJECTS := $(patsubst $(SRCDIR)/%.c, $(BUILDDIR)/%.o, $(SOURCES))
 
