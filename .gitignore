@@ -2,6 +2,7 @@ tests/
 build/
 tmp/
 out/
+docs/
 .vscode/
 exe
 vgcore.*
