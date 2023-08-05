@@ -15,12 +15,12 @@ void print_error_message(char const *filename) {
 }
 
 bool txt_to_bin(char const *txt_filename, char const *bin_filename, size_t size,
-                Perfomance *perfomance) {
+                Performance *perf) {
   clock_t start_clock = clock();
 
   FILE *txt_file = fopen(txt_filename, "r");
 
-  perfomance->comparisons_count += 1;
+  perf->comparisons_count += 1;
   if (!txt_file) {
     print_error_message(txt_filename);
     return false;
@@ -28,7 +28,7 @@ bool txt_to_bin(char const *txt_filename, char const *bin_filename, size_t size,
 
   FILE *bin_file = fopen(bin_filename, "wb");
 
-  perfomance->comparisons_count += 1;
+  perf->comparisons_count += 1;
   if (!bin_file) {
     print_error_message(bin_filename);
     return false;
@@ -37,7 +37,7 @@ bool txt_to_bin(char const *txt_filename, char const *bin_filename, size_t size,
   for (size_t i = 0; i < size; i++) {
     Register reg;
 
-    perfomance->reads_count += 1;
+    perf->reads_count += 1;
     fscanf(txt_file, "%zu %lf", &reg.id, &reg.grade);
     fgets(reg.content, CONTENT_MAX_SIZE, txt_file);
 
@@ -46,7 +46,7 @@ bool txt_to_bin(char const *txt_filename, char const *bin_filename, size_t size,
 
     fwrite(&reg, sizeof(Register), 1, bin_file);
 
-    perfomance->comparisons_count += 1;
+    perf->comparisons_count += 1;
     if (feof(txt_file))
       break;
   }
@@ -56,8 +56,7 @@ bool txt_to_bin(char const *txt_filename, char const *bin_filename, size_t size,
 
   clock_t end_clock = clock();
 
-  perfomance->execution_time =
-      ((double)(end_clock - start_clock)) / CLOCKS_PER_SEC;
+  perf->execution_time = ((double)(end_clock - start_clock)) / CLOCKS_PER_SEC;
 
   return true;
 }
@@ -80,26 +79,24 @@ void print_bin(char const *filename) {
   fclose(bin_file);
 }
 
-bool delete_file(char const *filename) {
+void delete_file(char const *filename) {
   if (remove(filename) != 0) {
     char msg[100];
-    sprintf(msg, "Failed to remove %s.", filename);
-    error_msg(msg);
-    return false;
-  }
+    sprintf(msg, "File not found to remove %s.\n", filename);
+    info_msg(msg);
+  } else {
 
-  char msg[100];
-  sprintf(msg, "%s was removed.\n", filename);
-  info_msg(msg);
-  return true;
+    char msg[100];
+    sprintf(msg, "%s was removed.\n", filename);
+    info_msg(msg);
+  }
 }
 
 bool bin_to_txt(char const *bin_filename, char const *txt_filename, size_t size,
-                Perfomance *perfomance) {
+                Performance *perf) {
   clock_t start_clock = clock();
 
-  if (!delete_file(txt_filename))
-    return false;
+  delete_file(txt_filename);
 
   FILE *bin_file = fopen(bin_filename, "rb");
 
@@ -121,7 +118,7 @@ bool bin_to_txt(char const *bin_filename, char const *txt_filename, size_t size,
 
     Register reg;
     fread(&reg, sizeof(Register), 1, bin_file);
-    perfomance->reads_count++;
+    perf->reads_count++;
     fprintf(txt_file, "%zu %.1lf %s\n", reg.id, reg.grade, reg.content);
   }
 
@@ -129,30 +126,29 @@ bool bin_to_txt(char const *bin_filename, char const *txt_filename, size_t size,
   fclose(txt_file);
 
   char msg[100];
-  sprintf(msg, "File %s created successfuly\n", txt_filename);
+  sprintf(msg, "File %s created successfully\n", txt_filename);
   success_msg(msg);
 
   clock_t end_clock = clock();
-  perfomance->execution_time +=
-      ((double)(end_clock - start_clock)) / CLOCKS_PER_SEC;
+  perf->execution_time += ((double)(end_clock - start_clock)) / CLOCKS_PER_SEC;
   return true;
 }
 
-bool cp_file(char const *origin_filename, char const *destintion_file_name) {
+bool cp_file(char const *origin_filename, char const *destination_file_name) {
   char command[100];
 
-  sprintf(command, "cp %s %s", origin_filename, destintion_file_name);
+  sprintf(command, "cp %s %s", origin_filename, destination_file_name);
 
   char msg[100];
   if (system(command) == -1) {
     sprintf(msg, "Failed to copy %s to %s\n", origin_filename,
-            destintion_file_name);
+            destination_file_name);
 
     error_msg(msg);
     return false;
   }
 
-  sprintf(msg, "Copied %s to %s\n", origin_filename, destintion_file_name);
+  sprintf(msg, "Copied %s to %s\n", origin_filename, destination_file_name);
   success_msg(msg);
   return true;
 }

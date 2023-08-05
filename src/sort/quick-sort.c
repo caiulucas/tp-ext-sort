@@ -4,19 +4,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <time.h>
 
-bool insert_register(Register *reg, Area *area) {
+bool insert_register(Register *reg, Area *area, Performance *perf) {
   if (area->reg_count >= AREA_SZ)
     return false;
 
   int index = 0;
 
   for (size_t i = 0; i < area->reg_count; i++) {
-    if (reg->grade > area->registers[i].grade)
-      index++;
-
-    else
+    perf->comparisons_count++;
+    if (reg->grade <= area->registers[i].grade)
       break;
+
+    index++;
   }
 
   for (int i = area->reg_count - 1; i >= index; i--) {
@@ -29,18 +30,24 @@ bool insert_register(Register *reg, Area *area) {
   return true;
 }
 
-void insert_in_area(Area *area, Register *reg, size_t *reg_count) {
-  insert_register(reg, area);
+void insert_in_area(Area *area, Register *reg, size_t *reg_count,
+                    Performance *perf) {
+  insert_register(reg, area, perf);
   *reg_count = area->reg_count;
 }
 
-void write_inf(FILE **file, Register reg, size_t *displacement) {
+void write_inf(FILE **file, Register reg, size_t *displacement,
+               Performance *perf) {
+  perf->writes_count++;
   fwrite(&reg, sizeof(Register), 1, *file);
   (*displacement)++;
 }
 
-void write_sup(FILE **file, Register reg, size_t *displacement) {
+void write_sup(FILE **file, Register reg, size_t *displacement,
+               Performance *perf) {
   fseek(*file, (*displacement - 1) * sizeof(Register), SEEK_SET);
+
+  perf->writes_count++;
   fwrite(&reg, sizeof(Register), 1, *file);
   (*displacement)--;
 }
@@ -71,7 +78,8 @@ void remove_sup(Area *area, Register *reg, size_t *reg_count) {
 }
 
 void read_inf(FILE **file, Register *reg, size_t *displacement,
-              bool *must_read_right) {
+              bool *must_read_right, Performance *perf) {
+  perf->reads_count++;
   fread(reg, sizeof(Register), 1, *file);
 
   (*displacement)++;
@@ -79,8 +87,10 @@ void read_inf(FILE **file, Register *reg, size_t *displacement,
 }
 
 void read_sup(FILE **file, Register *reg, size_t *displacement,
-              bool *must_read_right) {
+              bool *must_read_right, Performance *perf) {
   fseek(*file, (*displacement - 1) * sizeof(Register), SEEK_SET);
+
+  perf->reads_count++;
   fread(reg, sizeof(Register), 1, *file);
 
   (*displacement)--;
@@ -89,7 +99,7 @@ void read_sup(FILE **file, Register *reg, size_t *displacement,
 
 void partition(FILE **read_file_inf, FILE **write_file_sup,
                FILE **read_write_file, Area area, int left, int right, int *i,
-               int *j) {
+               int *j, Performance *perf) {
 
   size_t read_sup_disp = right;
   size_t read_inf_disp = left;
@@ -100,7 +110,7 @@ void partition(FILE **read_file_inf, FILE **write_file_sup,
   double inf_limit = DBL_MIN;
   double sup_limit = DBL_MAX;
 
-  bool leright = true;
+  bool must_read_right = true;
 
   Register last_read_reg, aux_reg;
 
@@ -111,56 +121,61 @@ void partition(FILE **read_file_inf, FILE **write_file_sup,
   *j = right + 1;
 
   while (read_sup_disp >= read_inf_disp) {
-
     if (reg_count < AREA_SZ - 1) {
-
-      if (leright)
-        read_sup(read_write_file, &last_read_reg, &read_sup_disp, &leright);
-
+      if (must_read_right)
+        read_sup(read_write_file, &last_read_reg, &read_sup_disp,
+                 &must_read_right, perf);
       else
-        read_inf(read_file_inf, &last_read_reg, &read_inf_disp, &leright);
+        read_inf(read_file_inf, &last_read_reg, &read_inf_disp,
+                 &must_read_right, perf);
 
-      insert_in_area(&area, &last_read_reg, &reg_count);
+      insert_in_area(&area, &last_read_reg, &reg_count, perf);
 
       continue;
     }
 
     if (read_sup_disp == write_sup_disp)
-      read_sup(read_write_file, &last_read_reg, &read_sup_disp, &leright);
+      read_sup(read_write_file, &last_read_reg, &read_sup_disp,
+               &must_read_right, perf);
 
     else if (read_inf_disp == write_inf_disp)
-      read_inf(read_file_inf, &last_read_reg, &read_inf_disp, &leright);
+      read_inf(read_file_inf, &last_read_reg, &read_inf_disp, &must_read_right,
+               perf);
 
-    else if (leright)
-      read_sup(read_write_file, &last_read_reg, &read_sup_disp, &leright);
+    else if (must_read_right)
+      read_sup(read_write_file, &last_read_reg, &read_sup_disp,
+               &must_read_right, perf);
 
     else
-      read_inf(read_file_inf, &last_read_reg, &read_inf_disp, &leright);
+      read_inf(read_file_inf, &last_read_reg, &read_inf_disp, &must_read_right,
+               perf);
 
+    perf->comparisons_count++;
     if (last_read_reg.grade <= inf_limit) {
       *i = write_inf_disp;
-      write_inf(write_file_sup, last_read_reg, &write_inf_disp);
+      write_inf(write_file_sup, last_read_reg, &write_inf_disp, perf);
       continue;
     }
 
+    perf->comparisons_count++;
     if (last_read_reg.grade >= sup_limit) {
       *j = write_sup_disp;
-      write_sup(read_write_file, last_read_reg, &write_sup_disp);
+      write_sup(read_write_file, last_read_reg, &write_sup_disp, perf);
       continue;
     }
 
-    insert_in_area(&area, &last_read_reg, &reg_count);
+    insert_in_area(&area, &last_read_reg, &reg_count, perf);
 
     if (write_inf_disp - left < right - write_sup_disp) {
       remove_inf(&area, &aux_reg, &reg_count);
-      write_inf(write_file_sup, aux_reg, &write_inf_disp);
+      write_inf(write_file_sup, aux_reg, &write_inf_disp, perf);
 
       inf_limit = aux_reg.grade;
     }
 
     else {
       remove_sup(&area, &aux_reg, &reg_count);
-      write_sup(read_write_file, aux_reg, &write_sup_disp);
+      write_sup(read_write_file, aux_reg, &write_sup_disp, perf);
 
       sup_limit = aux_reg.grade;
     }
@@ -168,12 +183,13 @@ void partition(FILE **read_file_inf, FILE **write_file_sup,
 
   while (write_inf_disp <= write_sup_disp) {
     remove_inf(&area, &aux_reg, &reg_count);
-    write_inf(write_file_sup, aux_reg, &write_inf_disp);
+    write_inf(write_file_sup, aux_reg, &write_inf_disp, perf);
   }
 }
 
 void quick_sort(FILE **inf_read_file, FILE **inf_write_file,
-                FILE **read_write_file, int left, int right) {
+                FILE **read_write_file, int left, int right,
+                Performance *perf) {
 
   int i;
   int j;
@@ -185,22 +201,22 @@ void quick_sort(FILE **inf_read_file, FILE **inf_write_file,
   area.reg_count = 0;
 
   partition(inf_read_file, inf_write_file, read_write_file, area, left, right,
-            &i, &j);
+            &i, &j, perf);
 
   fflush(*inf_read_file);
   fflush(*inf_write_file);
   fflush(*read_write_file);
 
   if (i - left < right - j) {
-    quick_sort(inf_read_file, inf_write_file, read_write_file, left, i);
-    quick_sort(inf_read_file, inf_write_file, read_write_file, j, right);
+    quick_sort(inf_read_file, inf_write_file, read_write_file, left, i, perf);
+    quick_sort(inf_read_file, inf_write_file, read_write_file, j, right, perf);
   } else {
-    quick_sort(inf_read_file, inf_write_file, read_write_file, j, right);
-    quick_sort(inf_read_file, inf_write_file, read_write_file, left, i);
+    quick_sort(inf_read_file, inf_write_file, read_write_file, j, right, perf);
+    quick_sort(inf_read_file, inf_write_file, read_write_file, left, i, perf);
   }
 }
 
-void ext_quick_sort(char const *filename, size_t size) {
+void ext_quick_sort(char const *filename, size_t size, Performance *perf) {
   FILE *inf_read_file = fopen(filename, "rb+");
   FILE *inf_write_file = fopen(filename, "rb+");
   FILE *read_write_file = fopen(filename, "rb+");
@@ -210,7 +226,11 @@ void ext_quick_sort(char const *filename, size_t size) {
     return;
   }
 
-  quick_sort(&inf_read_file, &inf_write_file, &read_write_file, 1, size);
+  size_t start_clock = clock();
+  quick_sort(&inf_read_file, &inf_write_file, &read_write_file, 1, size, perf);
+  size_t end_clock = clock();
+
+  perf->execution_time = (double)(end_clock - start_clock) / CLOCKS_PER_SEC;
 
   fclose(inf_read_file);
   fclose(inf_write_file);

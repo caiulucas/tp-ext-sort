@@ -12,4 +12,4 @@ typedef struct Area {
   size_t reg_count;
 } Area;
 
-void ext_quick_sort(char const *filename, size_t size);
+void ext_quick_sort(char const *filename, size_t size, Performance *perf);
