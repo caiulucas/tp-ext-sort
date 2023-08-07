@@ -134,6 +134,49 @@ bool bin_to_txt(char const *bin_filename, char const *txt_filename, size_t size,
   return true;
 }
 
+bool bin_to_txt_desc(char const *bin_filename, char const *txt_filename,
+                     size_t size, Performance *perf) {
+  clock_t start_clock = clock();
+
+  delete_file(txt_filename);
+
+  FILE *bin_file = fopen(bin_filename, "rb");
+
+  if (!bin_file) {
+    print_error_message(bin_filename);
+    return false;
+  }
+
+  FILE *txt_file = fopen(txt_filename, "w");
+
+  if (!txt_file) {
+    print_error_message(txt_filename);
+    return false;
+  }
+
+  fseek(bin_file, 0, SEEK_END);
+  size_t disp = ftell(bin_file);
+  printf("%zu", disp);
+  for (size_t i = 0; i < size; i++) {
+    fseek(bin_file, disp - sizeof(Register) * (i + 1), SEEK_SET);
+    Register reg;
+    fread(&reg, sizeof(Register), 1, bin_file);
+    perf->reads_count++;
+    fprintf(txt_file, "%zu %.1lf %s\n", reg.id, reg.grade, reg.content);
+  }
+
+  fclose(bin_file);
+  fclose(txt_file);
+
+  char msg[100];
+  sprintf(msg, "File %s created successfully\n", txt_filename);
+  success_msg(msg);
+
+  clock_t end_clock = clock();
+  perf->execution_time += ((double)(end_clock - start_clock)) / CLOCKS_PER_SEC;
+  return true;
+}
+
 bool tapes_to_txt(char const *txt_filename, Tape *tapes, size_t size) {
   FILE *txt_file = fopen(txt_filename, "a");
 

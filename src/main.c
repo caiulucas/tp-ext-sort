@@ -8,10 +8,13 @@
 #include "utils/status-messages.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 int main(int argc, char **argv) {
   // Tape tape;
+  Performance aff = {0, 0, 0, 0};
+  txt_to_bin("out/provao.txt", "tmp/provao.bin", 471705, &aff);
 
   if (argc < 4) {
     error_msg("Missing arguments\n");
@@ -27,9 +30,22 @@ int main(int argc, char **argv) {
   Performance sort_performance = {0, 0, 0, 0};
   Performance file_performance = {0, 0, 0, 0};
 
+  char filename[100];
+  switch (input.situation) {
+  case ASC:
+    strcpy(filename, "tmp/provao-asc.bin");
+    break;
+  case DESC:
+    strcpy(filename, "tmp/provao-desc.bin");
+    break;
+  case RANDOM:
+    strcpy(filename, "tmp/provao.bin");
+    break;
+  }
+
   switch (input.method) {
   case INTERNAL_INTERCALATION:
-    cp_file_sized("tmp/provao.bin", "tmp/provao-cp.bin", input.quantity);
+    cp_file(filename, "tmp/provao-cp.bin");
     internal_intercalation(input.method, "tmp/provao-cp.bin", &sort_performance,
                            &file_performance);
     break;
@@ -37,12 +53,12 @@ int main(int argc, char **argv) {
     // TODO;
     break;
   case QUICK_SORT:
-    cp_file("tmp/provao.bin", "tmp/provao-cp.bin");
+    cp_file(filename, "tmp/provao-cp.bin");
     ext_quick_sort("tmp/provao-cp.bin", input.quantity, &sort_performance);
     break;
   }
 
-  bin_to_txt("tmp/provao-cp.bin", "out/provao-1.txt", input.quantity,
+  bin_to_txt("tmp/provao-cp.bin", "out/provao-out.txt", input.quantity,
              &file_performance);
 
   printf("\n");
@@ -60,8 +76,7 @@ int main(int argc, char **argv) {
   info_msg("Total performance:\n");
   print_performance(total_perf);
 
-  char filename[100];
-
+  strcpy(filename, "");
   sprintf(filename, "docs/performance-%lu.txt", time(NULL));
 
   save_performance(filename, "Sorting performance:", sort_performance);

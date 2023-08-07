@@ -4,7 +4,6 @@
 #include "../sort/merge-sort.h"
 #include "../sort/tapes.h"
 #include "../utils/status-messages.h"
-#include <stddef.h>
 #include <time.h>
 
 bool should_intercalate(Tape *tapes, bool is_intercalated) {
@@ -24,43 +23,30 @@ bool should_intercalate(Tape *tapes, bool is_intercalated) {
   return false;
 }
 
-int menorElemento(Register *registers, int *reg_indexes, Performance *perf) {
-
-  int indiceMenor;
+int find_min_register(Register *reg, Register *registers, int *reg_indexes,
+                      Performance *perf) {
+  int index;
 
   for (int i = 0; i < TAPES_SZ; i++) {
     if (reg_indexes[i] > 0) {
-      indiceMenor = i;
+      index = i;
       break;
     }
   }
 
-  for (int i = indiceMenor + 1; i < BLOCK_SZ; i++) {
-
+  for (int i = index + 1; i < BLOCK_SZ; i++) {
     perf->comparisons_count += 1;
 
-    if (registers[i].grade < registers[indiceMenor].grade &&
-        reg_indexes[i] > 0) {
-      indiceMenor = i;
+    if (registers[i].grade < registers[index].grade && reg_indexes[i] > 0) {
+      index = i;
     }
   }
 
-  return indiceMenor;
+  *reg = registers[index];
+  return index;
 }
 
-int somaVetorControle(int *vetorControle) {
-
-  int soma = 0;
-
-  for (int i = 0; i < (HALF_TAPES_SZ); i++) {
-    soma += vetorControle[i];
-  }
-
-  return soma;
-}
-
-bool temAlunoValido(int *reg_indexes) {
-
+bool has_valid_register(int *reg_indexes) {
   for (int i = 0; i < (HALF_TAPES_SZ); i++) {
     if (reg_indexes[i] == 1)
       return true;
@@ -133,14 +119,18 @@ bool intercalate(Tape *tapes, int block_index, bool is_intercalated,
     fread(&(aux_indexes[i % (HALF_TAPES_SZ)]), sizeof(int), 1, tapes[i].file);
   }
 
-  int soma = somaVetorControle(aux_indexes);
+  int next_index = 0;
+
+  for (int i = 0; i < (HALF_TAPES_SZ); i++) {
+    next_index += aux_indexes[i];
+  }
 
   tapes[write_tape_index].block_size++;
 
-  fwrite(&soma, sizeof(int), 1, tapes[write_tape_index].file);
+  fwrite(&next_index, sizeof(int), 1, tapes[write_tape_index].file);
   perf->writes_count += 1;
 
-  for (int i = index_input_tapes; i < index_input_tapes + (HALF_TAPES_SZ);
+  for (int i = index_input_tapes; i < (int)index_input_tapes + (HALF_TAPES_SZ);
        i++) {
     if (aux_indexes[i % (HALF_TAPES_SZ)] > 0) {
       fread(&registers[i % (HALF_TAPES_SZ)], sizeof(Register), 1,
@@ -151,30 +141,24 @@ bool intercalate(Tape *tapes, int block_index, bool is_intercalated,
     }
   }
 
-  int contadorarbitrario = 0;
-
-  while (temAlunoValido(reg_indexes)) {
-    int offsetLeituraAlteranada = 0;
+  while (has_valid_register(reg_indexes)) {
+    int disp = 0;
 
     if (is_intercalated)
-      offsetLeituraAlteranada = HALF_TAPES_SZ;
+      disp = HALF_TAPES_SZ;
 
-    contadorarbitrario++;
+    Register reg;
+    int index = find_min_register(&reg, registers, reg_indexes, perf);
 
-    int indiceMenorElemento = menorElemento(registers, reg_indexes, perf);
-
-    Register aluno = registers[indiceMenorElemento];
-
-    fwrite(&aluno, sizeof(Register), 1, tapes[write_tape_index].file);
+    fwrite(&reg, sizeof(Register), 1, tapes[write_tape_index].file);
     perf->writes_count += 1;
-    reg_indexes[indiceMenorElemento] = 0;
+    reg_indexes[index] = 0;
 
-    if (aux_indexes[indiceMenorElemento] > 0) {
-      fread(&registers[indiceMenorElemento], sizeof(Register), 1,
-            tapes[indiceMenorElemento + offsetLeituraAlteranada].file);
+    if (aux_indexes[index] > 0) {
+      fread(&registers[index], sizeof(Register), 1, tapes[index + disp].file);
       perf->reads_count += 1;
-      reg_indexes[indiceMenorElemento] = 1;
-      aux_indexes[indiceMenorElemento]--;
+      reg_indexes[index] = 1;
+      aux_indexes[index]--;
     }
   }
 

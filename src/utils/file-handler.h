@@ -17,6 +17,9 @@ void print_bin(char const *bin_filename);
 bool bin_to_txt(char const *bin_filename, char const *txt_filename, size_t size,
                 Performance *perf);
 
+bool bin_to_txt_desc(char const *bin_filename, char const *txt_filename,
+                     size_t size, Performance *perf);
+
 bool tapes_to_txt(char const *txt_filename, Tape *tapes, size_t size);
 
 // Copy a file
