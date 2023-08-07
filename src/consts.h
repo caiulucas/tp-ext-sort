@@ -5,7 +5,6 @@
 #define AVAILABLE_TAPES 40
 #define FILENAME_LENGTH 15
 #define MAX_BLOCK_SIZE 20
-
 #define CONTENT_MAX_SIZE 85
 
 // Represents a method of sorting (internal intercalation, external
@@ -28,8 +27,8 @@ typedef struct Register {
 
 // Represents a block of registers
 typedef struct Block {
-  Register *registers;
-  size_t registers_count;
+  Register registers[20];
+  int registers_count;
 } Block;
 
 // Represents the arguments of the program

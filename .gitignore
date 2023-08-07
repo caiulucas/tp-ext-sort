@@ -3,6 +3,7 @@ build/
 tmp/
 out/
 docs/
+tapes/
 .vscode/
 
 ordena

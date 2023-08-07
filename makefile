@@ -1,5 +1,5 @@
 CC := g++
-CFLAGS := -Wall -Wextra -Werror -O3 -pthread
+CFLAGS := -Wall
 
 SRCDIR := src
 BUILDDIR := build

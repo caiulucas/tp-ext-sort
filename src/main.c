@@ -1,4 +1,5 @@
 #include "consts.h"
+#include "intercalation/intercalation.h"
 #include "sort/merge-sort.h"
 #include "sort/quick-sort.h"
 #include "sort/tapes.h"
@@ -26,21 +27,23 @@ int main(int argc, char **argv) {
   Performance sort_performance = {0, 0, 0, 0};
   Performance file_performance = {0, 0, 0, 0};
 
-  cp_file("tmp/provao.bin", "tmp/provao-cp.bin");
-
   switch (input.method) {
   case INTERNAL_INTERCALATION:
-    // TODO;
+    cp_file_sized("tmp/provao.bin", "tmp/provao-cp.bin", input.quantity);
+    internal_intercalation(input.method, "tmp/provao-cp.bin", &sort_performance,
+                           &file_performance);
     break;
   case EXTERNAL_INTERCALATION:
     // TODO;
     break;
   case QUICK_SORT:
+    cp_file("tmp/provao.bin", "tmp/provao-cp.bin");
     ext_quick_sort("tmp/provao-cp.bin", input.quantity, &sort_performance);
-    bin_to_txt("tmp/provao-cp.bin", "out/provao-1.txt", input.quantity,
-               &file_performance);
     break;
   }
+
+  bin_to_txt("tmp/provao-cp.bin", "out/provao-1.txt", input.quantity,
+             &file_performance);
 
   printf("\n");
   info_msg("Sorting performance:\n");
@@ -58,6 +61,7 @@ int main(int argc, char **argv) {
   print_performance(total_perf);
 
   char filename[100];
+
   sprintf(filename, "docs/performance-%lu.txt", time(NULL));
 
   save_performance(filename, "Sorting performance:", sort_performance);

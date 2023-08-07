@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../consts.h"
+#include "../sort/tapes.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 
 // Converts a text file into a binary file
@@ -15,5 +17,11 @@ void print_bin(char const *bin_filename);
 bool bin_to_txt(char const *bin_filename, char const *txt_filename, size_t size,
                 Performance *perf);
 
+bool tapes_to_txt(char const *txt_filename, Tape *tapes, size_t size);
+
 // Copy a file
 bool cp_file(char const *origin_filename, char const *destination_file_name);
+
+// Copy n registers of a file to another
+bool cp_file_sized(char const *origin_filename,
+                   char const *destination_file_name, size_t size);

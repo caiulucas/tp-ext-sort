@@ -1,39 +1,256 @@
+
 #include "intercalation.h"
 #include "../consts.h"
 #include "../sort/merge-sort.h"
 #include "../sort/tapes.h"
-#include <stdbool.h>
+#include "../utils/status-messages.h"
 #include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <time.h>
 
-Block init_block() {
-  Block *block = (Block *)malloc(sizeof(Block));
-  block->registers = (Register *)malloc(sizeof(Register) * MAX_BLOCK_SIZE);
-  block->registers_count = 0;
+bool should_intercalate(Tape *tapes, bool is_intercalated) {
+  size_t blocks_size = 0;
+  size_t index = 0;
 
-  return *block;
+  if (is_intercalated)
+    index = HALF_TAPES_SZ;
+
+  for (size_t i = index; i < index + (HALF_TAPES_SZ); i++) {
+    blocks_size += tapes[i].block_size;
+
+    if (blocks_size > 1)
+      return true;
+  }
+
+  return false;
 }
 
-void generate_blocks(Tape *tapes, char *filename) {
+int menorElemento(Register *registers, int *reg_indexes, Performance *perf) {
+
+  int indiceMenor;
+
+  for (int i = 0; i < TAPES_SZ; i++) {
+    if (reg_indexes[i] > 0) {
+      indiceMenor = i;
+      break;
+    }
+  }
+
+  for (int i = indiceMenor + 1; i < BLOCK_SZ; i++) {
+
+    perf->comparisons_count += 1;
+
+    if (registers[i].grade < registers[indiceMenor].grade &&
+        reg_indexes[i] > 0) {
+      indiceMenor = i;
+    }
+  }
+
+  return indiceMenor;
+}
+
+int somaVetorControle(int *vetorControle) {
+
+  int soma = 0;
+
+  for (int i = 0; i < (HALF_TAPES_SZ); i++) {
+    soma += vetorControle[i];
+  }
+
+  return soma;
+}
+
+bool temAlunoValido(int *reg_indexes) {
+
+  for (int i = 0; i < (HALF_TAPES_SZ); i++) {
+    if (reg_indexes[i] == 1)
+      return true;
+  }
+
+  return false;
+}
+
+void internal_sort(char const *filename, Tape *tapes, Performance *perf) {
   FILE *file = fopen(filename, "rb+");
 
-  Block current_block = init_block();
-
   if (!file) {
-    printf("File %s not found\n", filename);
+    error_msg("Failed to open file.");
     return;
   }
 
-  size_t tapes_count = 0;
+  Block block;
+  size_t tape_index = 0;
 
-  while (
-      fread(current_block.registers, sizeof(Register), MAX_BLOCK_SIZE, file)) {
-    current_block.registers_count = ftell(file) / sizeof(Register);
+  block.registers_count =
+      fread(block.registers, sizeof(Register), BLOCK_SZ, file);
+  perf->reads_count += 1;
 
-    merge_sort(current_block.registers, 0, current_block.registers_count - 1);
+  merge_sort(block.registers, 0, block.registers_count - 1, perf);
 
-    if (current_block.registers_count > 0)
-      add_block_to_tape(&tapes[tapes_count % 20], &current_block);
+  while (block.registers_count > 0) {
+    block.registers_count =
+        fread(block.registers, sizeof(Register), BLOCK_SZ, file);
+    perf->reads_count += 1;
+
+    merge_sort(block.registers, 0, block.registers_count - 1, perf);
+
+    if (block.registers_count > 0) {
+      add_block(&tapes[tape_index % BLOCK_SZ], &block, perf);
+      tape_index++;
+    }
   }
+}
+
+bool intercalate(Tape *tapes, int block_index, bool is_intercalated,
+                 Performance *perf) {
+
+  int reg_indexes[HALF_TAPES_SZ];
+  int aux_indexes[HALF_TAPES_SZ];
+
+  for (int i = 0; i < (HALF_TAPES_SZ); i++) {
+    reg_indexes[i] = 0;
+  }
+
+  Register registers[BLOCK_SZ];
+
+  size_t write_tape_index = (((block_index - 1) % (HALF_TAPES_SZ)));
+
+  if (!is_intercalated)
+    write_tape_index += HALF_TAPES_SZ;
+
+  size_t index_input_tapes = 0;
+
+  if (is_intercalated)
+    index_input_tapes = HALF_TAPES_SZ;
+
+  for (size_t i = index_input_tapes; i < index_input_tapes + (HALF_TAPES_SZ);
+       i++) {
+    if (tapes[i].block_size < block_index) {
+      aux_indexes[i] = 0;
+      continue;
+    }
+
+    perf->reads_count += 1;
+    fread(&(aux_indexes[i % (HALF_TAPES_SZ)]), sizeof(int), 1, tapes[i].file);
+  }
+
+  int soma = somaVetorControle(aux_indexes);
+
+  tapes[write_tape_index].block_size++;
+
+  fwrite(&soma, sizeof(int), 1, tapes[write_tape_index].file);
+  perf->writes_count += 1;
+
+  for (int i = index_input_tapes; i < index_input_tapes + (HALF_TAPES_SZ);
+       i++) {
+    if (aux_indexes[i % (HALF_TAPES_SZ)] > 0) {
+      fread(&registers[i % (HALF_TAPES_SZ)], sizeof(Register), 1,
+            tapes[i].file);
+      perf->reads_count += 1;
+      reg_indexes[i % (HALF_TAPES_SZ)] = 1;
+      aux_indexes[i % (HALF_TAPES_SZ)]--;
+    }
+  }
+
+  int contadorarbitrario = 0;
+
+  while (temAlunoValido(reg_indexes)) {
+    int offsetLeituraAlteranada = 0;
+
+    if (is_intercalated)
+      offsetLeituraAlteranada = HALF_TAPES_SZ;
+
+    contadorarbitrario++;
+
+    int indiceMenorElemento = menorElemento(registers, reg_indexes, perf);
+
+    Register aluno = registers[indiceMenorElemento];
+
+    fwrite(&aluno, sizeof(Register), 1, tapes[write_tape_index].file);
+    perf->writes_count += 1;
+    reg_indexes[indiceMenorElemento] = 0;
+
+    if (aux_indexes[indiceMenorElemento] > 0) {
+      fread(&registers[indiceMenorElemento], sizeof(Register), 1,
+            tapes[indiceMenorElemento + offsetLeituraAlteranada].file);
+      perf->reads_count += 1;
+      reg_indexes[indiceMenorElemento] = 1;
+      aux_indexes[indiceMenorElemento]--;
+    }
+  }
+
+  flush_tapes(tapes);
+  return true;
+}
+
+bool balanced_intercalation(char const *out_filename, Tape *tapes,
+                            Performance *perf) {
+  bool is_intercalated = false;
+
+  while (should_intercalate(tapes, is_intercalated)) {
+    flush_tapes(tapes);
+    rewind_tapes(tapes);
+
+    reopen_tapes(tapes, is_intercalated);
+
+    size_t blocks_size = block_size(tapes, is_intercalated);
+
+    for (size_t i = 0; i < blocks_size; i++) {
+      intercalate(tapes, i + 1, is_intercalated, perf);
+      flush_tapes(tapes);
+    }
+
+    is_intercalated = !is_intercalated;
+
+    rewind_tapes(tapes);
+    imprimeFitas(tapes);
+
+    flush_tapes(tapes);
+  }
+
+  size_t tape_index = 0;
+
+  if (is_intercalated)
+    tape_index += HALF_TAPES_SZ;
+
+  rewind_tapes(tapes);
+
+  for (size_t i = tape_index; i < tape_index + HALF_TAPES_SZ; i++) {
+    if (tapes[i].block_size > 0) {
+      Register reg;
+      FILE *txt_file = fopen(out_filename, "w");
+
+      int trash;
+      rewind(tapes[i].file);
+      fread(&trash, sizeof(int), 1, tapes[i].file);
+
+      while (fread(&reg, sizeof(Register), 1, tapes[i].file)) {
+        fprintf(txt_file, "%ld %f %s\n", reg.id, reg.grade, reg.content);
+      }
+
+      break;
+    }
+  }
+
+  close_tapes(tapes);
+  return true;
+}
+
+void internal_intercalation(Method method, char const *filename,
+                            Performance *file_perf, Performance *sort_perf) {
+  Tape tapes[TAPES_SZ];
+  init_tapes(tapes, "tapes/tape");
+
+  clock_t start_clock = clock();
+  internal_sort(filename, tapes, sort_perf);
+  clock_t end_clock = clock();
+
+  sort_perf->execution_time =
+      (double)(end_clock - start_clock) / CLOCKS_PER_SEC;
+
+  start_clock = clock();
+  balanced_intercalation("out/internal.txt", tapes, file_perf);
+  end_clock = clock();
+
+  file_perf->execution_time =
+      (double)(end_clock - start_clock) / CLOCKS_PER_SEC;
 }

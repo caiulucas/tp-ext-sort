@@ -1,46 +1,51 @@
+
 #include "merge-sort.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 
-// Merges a list of items
-void merge(Register *registers, size_t left, size_t middle, size_t right) {
-  size_t left_sz = middle - left + 1;
-  size_t right_sz = right - middle;
+void merge(Register *vetor, int left, int middle, int right,
+           Performance *perf) {
+  int left_size = (middle - left + 1);
+  int right_size = (right - middle);
 
-  Register *left_registers = (Register *)malloc(sizeof(Register) * left_sz);
-  Register *right_registers = (Register *)malloc(sizeof(Register) * right_sz);
+  Register *left_registers = (Register *)malloc(sizeof(Register) * left_size);
+  Register *right_registers = (Register *)malloc(sizeof(Register) * right_size);
 
-  for (size_t i = 0; i < left_sz; i++)
-    left_registers[i] = registers[i + left];
+  for (int i = 0; i < left_size; i++) {
+    left_registers[i] = vetor[i + left];
+  }
 
-  for (size_t i = 0; i < right_sz; i++)
-    right_registers[i] = registers[i + middle + 1];
+  for (int j = 0; j < right_size; j++) {
+    right_registers[j] = vetor[j + middle + 1];
+  }
 
-  size_t left_index = 0;
-  size_t right_index = 0;
+  int i = 0;
+  int j = 0;
 
-  for (size_t i = left; i <= right; i++) {
-    if (right_index == right_sz ||
-        left_registers[left_index].id < right_registers[right_index].id) {
-      registers[i] = left_registers[left_index];
-      left_index++;
-    } else {
-      registers[i] = right_registers[right_index];
-      right_index++;
-    }
+  for (int k = left; k <= right; k++) {
+    perf->comparisons_count++;
+    if (i == left_size)
+      vetor[k] = right_registers[j++];
+    else if (j == right_size)
+      vetor[k] = left_registers[i++];
+    else if (left_registers[i].grade <= right_registers[j].grade)
+      vetor[k] = left_registers[i++];
+    else
+      vetor[k] = right_registers[j++];
   }
 
   free(left_registers);
   free(right_registers);
 }
 
-void merge_sort(Register *registers, int left, int right) {
-  if (left == right)
-    return;
+void merge_sort(Register *registers, int left, int right, Performance *perf) {
 
-  int middle = (left + right) / 2;
-
-  merge_sort(registers, left, middle);
-  merge_sort(registers, middle + 1, right);
-
-  merge(registers, left, middle, right);
+  if (left < right) {
+    int middle = (right + left) / 2;
+    merge_sort(registers, left, middle, perf);
+    merge_sort(registers, middle + 1, right, perf);
+    merge(registers, left, middle, right, perf);
+  }
 }

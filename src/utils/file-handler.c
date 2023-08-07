@@ -1,8 +1,8 @@
 #include "file-handler.h"
 #include "../consts.h"
 #include "status-messages.h"
+#include <bits/types/FILE.h>
 #include <math.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -134,6 +134,28 @@ bool bin_to_txt(char const *bin_filename, char const *txt_filename, size_t size,
   return true;
 }
 
+bool tapes_to_txt(char const *txt_filename, Tape *tapes, size_t size) {
+  FILE *txt_file = fopen(txt_filename, "a");
+
+  if (!txt_file) {
+    error_msg("Failed to open file.");
+    return false;
+  }
+
+  for (size_t i = 0; i < size; i++) {
+    if (tapes[i].block_size < 0)
+      return true;
+
+    Register reg;
+
+    fread(NULL, sizeof(int), 1, tapes[i].file);
+    fread(&reg, sizeof(Register), 1, tapes[i].file);
+    fprintf(txt_file, "%ld %.1f %s", reg.id, reg.grade, reg.content);
+  }
+
+  return true;
+}
+
 bool cp_file(char const *origin_filename, char const *destination_file_name) {
   char command[100];
 
@@ -149,6 +171,40 @@ bool cp_file(char const *origin_filename, char const *destination_file_name) {
   }
 
   sprintf(msg, "Copied %s to %s\n", origin_filename, destination_file_name);
+  success_msg(msg);
+  return true;
+}
+
+bool cp_file_sized(char const *origin_filename,
+                   char const *destination_filename, size_t size) {
+
+  FILE *origin_file = fopen(origin_filename, "rb");
+
+  if (!origin_file) {
+    error_msg("Unable to open origin file.");
+    return false;
+  }
+
+  delete_file(destination_filename);
+
+  FILE *destination_file = fopen(destination_filename, "wb");
+
+  if (!destination_file) {
+    error_msg("Unable to open destination file.");
+    return false;
+  }
+
+  for (size_t i = 0; i < size; i++) {
+    if (feof(origin_file))
+      break;
+
+    Register reg;
+    fread(&reg, sizeof(Register), 1, origin_file);
+    fwrite(&reg, sizeof(Register), 1, destination_file);
+  }
+
+  char msg[100];
+  sprintf(msg, "Copied %s to %s\n", origin_filename, destination_filename);
   success_msg(msg);
   return true;
 }
