@@ -1,7 +1,6 @@
 #include "file-handler.h"
 #include "../consts.h"
 #include "status-messages.h"
-#include <bits/types/FILE.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

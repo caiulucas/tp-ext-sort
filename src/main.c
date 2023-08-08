@@ -1,5 +1,6 @@
 #include "consts.h"
 #include "intercalation/intercalation.h"
+#include "models/input.h"
 #include "sort/merge-sort.h"
 #include "sort/quick-sort.h"
 #include "sort/tapes.h"
@@ -12,10 +13,6 @@
 #include <time.h>
 
 int main(int argc, char **argv) {
-  // Tape tape;
-  Performance aff = {0, 0, 0, 0};
-  txt_to_bin("out/provao.txt", "tmp/provao.bin", 471705, &aff);
-
   if (argc < 4) {
     error_msg("Missing arguments\n");
     info_msg("Example: ./exe <method> <quantity> <situation>");

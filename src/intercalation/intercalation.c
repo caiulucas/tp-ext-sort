@@ -186,8 +186,6 @@ bool balanced_intercalation(char const *out_filename, Tape *tapes,
     is_intercalated = !is_intercalated;
 
     rewind_tapes(tapes);
-    imprimeFitas(tapes);
-
     flush_tapes(tapes);
   }
 

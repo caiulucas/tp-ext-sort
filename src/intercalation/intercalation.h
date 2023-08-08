@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../consts.h"
+#include "../models/method.h"
+#include "../models/perfomance.h"
 #include <stdbool.h>
 #include <stdio.h>
 

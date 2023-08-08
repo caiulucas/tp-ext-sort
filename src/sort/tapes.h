@@ -1,12 +1,13 @@
+#pragma once
 #include "../consts.h"
+#include "../models/block.h"
+#include "../models/perfomance.h"
 #include <stdbool.h>
 #include <stdio.h>
 
 #define BLOCK_SZ 20
 #define TAPES_SZ 40
 #define HALF_TAPES_SZ 20
-
-#pragma once
 
 typedef enum TapeType { INPUT, OUTPUT } TapeType;
 
@@ -36,16 +37,3 @@ void add_block(Tape *tape, Block *block, Performance *perf);
 
 // Gives the max block size in tapes
 int block_size(Tape *, bool);
-
-// Impressão --------------------------------------------------
-
-// Imprime uma fita
-void imprimeFita(Tape *);
-
-// Imprime todas as fitas
-void imprimeFitas(Tape *);
-
-// Auxiliar --------------------------------------------------
-
-// Converte uma fita para arquivo texto
-void converteFitaTexto(Tape);

@@ -190,7 +190,6 @@ void partition(FILE **read_file_inf, FILE **write_file_sup,
 void quick_sort(FILE **inf_read_file, FILE **inf_write_file,
                 FILE **read_write_file, int left, int right,
                 Performance *perf) {
-
   int i;
   int j;
 

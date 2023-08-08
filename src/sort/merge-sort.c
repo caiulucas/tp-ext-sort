@@ -41,7 +41,6 @@ void merge(Register *vetor, int left, int middle, int right,
 }
 
 void merge_sort(Register *registers, int left, int right, Performance *perf) {
-
   if (left < right) {
     int middle = (right + left) / 2;
     merge_sort(registers, left, middle, perf);
