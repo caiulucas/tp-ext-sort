@@ -1,5 +1,6 @@
 #include "file-handler.h"
 #include "../consts.h"
+#include "../models/register.h"
 #include "status-messages.h"
 #include <math.h>
 #include <stdio.h>

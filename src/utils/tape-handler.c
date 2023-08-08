@@ -1,6 +1,5 @@
-#include "tapes.h"
+#include "tape-handler.h"
 #include "../utils/status-messages.h"
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,9 +31,9 @@ int block_size(Tape *tapes, bool is_intercalation) {
   int index = 0;
 
   if (is_intercalation)
-    index = TAPES_SZ / 2;
+    index = HALF_TAPES_SZ;
 
-  for (int i = index; i < index + (TAPES_SZ / 2); i++) {
+  for (int i = index; i < index + (HALF_TAPES_SZ); i++) {
     if (tapes[i].block_size > block_size)
       block_size = tapes[i].block_size;
   }
@@ -56,14 +55,14 @@ void rewind_tapes(Tape *tapes) {
 
 void reopen_tapes(Tape *tapes, bool is_inverse) {
   if (is_inverse) {
-    for (int i = 0; i < TAPES_SZ / 2; i++) {
+    for (int i = 0; i < HALF_TAPES_SZ; i++) {
       tapes[i].file = freopen(NULL, "wb+", tapes[i].file);
       tapes[i].block_size = 0;
     }
     return;
   }
 
-  for (int i = TAPES_SZ / 2; i < TAPES_SZ; i++) {
+  for (int i = HALF_TAPES_SZ; i < TAPES_SZ; i++) {
     tapes[i].file = freopen(NULL, "wb+", tapes[i].file);
     tapes[i].block_size = 0;
   }

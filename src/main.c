@@ -1,9 +1,10 @@
 #include "consts.h"
+#include "intercalation/external-intercalation.h"
 #include "intercalation/intercalation.h"
+#include "intercalation/internal-intercalation.h"
 #include "models/input.h"
 #include "sort/merge-sort.h"
 #include "sort/quick-sort.h"
-#include "sort/tapes.h"
 #include "utils/file-handler.h"
 #include "utils/performance-handler.h"
 #include "utils/status-messages.h"
@@ -42,12 +43,14 @@ int main(int argc, char **argv) {
 
   switch (input.method) {
   case INTERNAL_INTERCALATION:
-    cp_file(filename, "tmp/provao-cp.bin");
+    cp_file_sized(filename, "tmp/provao-cp.bin", input.quantity);
     internal_intercalation(input.method, "tmp/provao-cp.bin", &sort_performance,
                            &file_performance);
     break;
   case EXTERNAL_INTERCALATION:
-    // TODO;
+    cp_file_sized(filename, "tmp/provao-cp.bin", input.quantity);
+    external_intercalation(input.method, "tmp/provao-cp.bin", &sort_performance,
+                           &file_performance);
     break;
   case QUICK_SORT:
     cp_file(filename, "tmp/provao-cp.bin");

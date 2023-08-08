@@ -1,6 +1,6 @@
 #pragma once
-
 #include "../consts.h"
+#include "../models/performance.h"
 
 // Print the performance of a function
 void print_performance(Performance perf);

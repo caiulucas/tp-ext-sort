@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../consts.h"
-#include "../models/perfomance.h"
+#include "../models/performance.h"
 #include "../models/register.h"
 
 // Sort a list by merging each item. [O(n*log(n)]

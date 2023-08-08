@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void merge(Register *vetor, int left, int middle, int right,
+void merge(Register *registers, int left, int middle, int right,
            Performance *perf) {
   int left_size = (middle - left + 1);
   int right_size = (right - middle);
@@ -14,11 +14,11 @@ void merge(Register *vetor, int left, int middle, int right,
   Register *right_registers = (Register *)malloc(sizeof(Register) * right_size);
 
   for (int i = 0; i < left_size; i++) {
-    left_registers[i] = vetor[i + left];
+    left_registers[i] = registers[i + left];
   }
 
   for (int j = 0; j < right_size; j++) {
-    right_registers[j] = vetor[j + middle + 1];
+    right_registers[j] = registers[j + middle + 1];
   }
 
   int i = 0;
@@ -27,13 +27,13 @@ void merge(Register *vetor, int left, int middle, int right,
   for (int k = left; k <= right; k++) {
     perf->comparisons_count++;
     if (i == left_size)
-      vetor[k] = right_registers[j++];
+      registers[k] = right_registers[j++];
     else if (j == right_size)
-      vetor[k] = left_registers[i++];
+      registers[k] = left_registers[i++];
     else if (left_registers[i].grade <= right_registers[j].grade)
-      vetor[k] = left_registers[i++];
+      registers[k] = left_registers[i++];
     else
-      vetor[k] = right_registers[j++];
+      registers[k] = right_registers[j++];
   }
 
   free(left_registers);

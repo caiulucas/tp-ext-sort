@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
-#define AVAILABLE_TAPES 40
-#define FILENAME_LENGTH 15
-#define MAX_BLOCK_SIZE 20
+#define BLOCK_SZ 20
+#define TAPES_SZ 40
+#define HALF_TAPES_SZ TAPES_SZ / 2
+#define AREA_SZ 100

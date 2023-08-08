@@ -1,21 +1,9 @@
 #pragma once
 #include "../consts.h"
 #include "../models/block.h"
-#include "../models/perfomance.h"
+#include "../models/performance.h"
+#include "../models/tape.h"
 #include <stdbool.h>
-#include <stdio.h>
-
-#define BLOCK_SZ 20
-#define TAPES_SZ 40
-#define HALF_TAPES_SZ 20
-
-typedef enum TapeType { INPUT, OUTPUT } TapeType;
-
-typedef struct Tape {
-  TapeType type;
-  FILE *file;
-  int block_size;
-} Tape;
 
 // Initialize the tapes by creating its files.
 void init_tapes(Tape *tapes, char const *filename);
@@ -29,7 +17,7 @@ void close_tapes(Tape *tapes);
 // Reopens the tapes
 void reopen_tapes(Tape *tapes, bool is_inverse);
 
-// Dá um fflush em todas as fitas
+// flushes all tapes
 void flush_tapes(Tape *);
 
 // Adds a new block to a tape

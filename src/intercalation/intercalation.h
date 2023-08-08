@@ -2,7 +2,8 @@
 
 #include "../consts.h"
 #include "../models/method.h"
-#include "../models/perfomance.h"
+#include "../models/performance.h"
+#include "../models/tape.h"
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -11,5 +12,5 @@ typedef struct RegisterIndex {
   bool is_valid;
 } RegisterIndex;
 
-void internal_intercalation(Method method, char const *filename,
-                            Performance *file_perf, Performance *sort_perf);
+bool balanced_intercalation(char const *out_filename, Tape *tapes,
+                            Performance *perf);

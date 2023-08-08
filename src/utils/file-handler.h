@@ -1,7 +1,8 @@
 #pragma once
 
 #include "../consts.h"
-#include "../sort/tapes.h"
+#include "../models/performance.h"
+#include "../models/tape.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
