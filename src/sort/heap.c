@@ -1,10 +1,14 @@
 #include "heap.h"
 
 bool compare(HeapRegister *reg_1, HeapRegister *reg_2, Performance *perf) {
-  if (reg_1->tagged != reg_2->tagged)
-    return reg_2->tagged;
-
-  return reg_1->reg.grade > reg_2->reg.grade;
+  perf->comparisons_count += 1;
+  if (reg_1->tagged < reg_2->tagged) {
+    return false;
+  } else if (reg_1->tagged > reg_2->tagged) {
+    return true;
+  } else {
+    return reg_1->reg.grade >= reg_2->reg.grade;
+  }
 }
 
 void rebuild_heap(HeapRegister *registers, int left, int right,

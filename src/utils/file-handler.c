@@ -74,7 +74,7 @@ void print_bin(char const *filename) {
   printf("\n");
   info_msg("Printing file...\n");
   while (fread(&reg, sizeof(Register), 1, bin_file)) {
-    printf("%zu %lf %s\n", reg.id, reg.grade, reg.content);
+    printf("%08zu %04.1f %s", reg.id, reg.grade, reg.content);
   }
   printf("\n");
 
@@ -121,7 +121,7 @@ bool bin_to_txt(char const *bin_filename, char const *txt_filename, size_t size,
     Register reg;
     fread(&reg, sizeof(Register), 1, bin_file);
     perf->reads_count++;
-    fprintf(txt_file, "%zu %.1lf %s\n", reg.id, reg.grade, reg.content);
+    fprintf(txt_file, "%08zu %04.1f %s", reg.id, reg.grade, reg.content);
   }
 
   fclose(bin_file);
@@ -164,7 +164,7 @@ bool bin_to_txt_desc(char const *bin_filename, char const *txt_filename,
     Register reg;
     fread(&reg, sizeof(Register), 1, bin_file);
     perf->reads_count++;
-    fprintf(txt_file, "%zu %.1lf %s\n", reg.id, reg.grade, reg.content);
+    fprintf(txt_file, "%08zu %04.1f %s", reg.id, reg.grade, reg.content);
   }
 
   fclose(bin_file);

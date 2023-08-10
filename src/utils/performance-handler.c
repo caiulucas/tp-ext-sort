@@ -5,6 +5,7 @@ void print_performance(Performance perf) {
   printf("Execution time: %lfs\n", perf.execution_time);
   printf("Comparisons count: %zu\n", perf.comparisons_count);
   printf("Reads count: %zu\n", perf.reads_count);
+  printf("Writes count: %zu\n", perf.writes_count);
 }
 
 void merge_performance(Performance *perf1, Performance *perf2,

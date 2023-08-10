@@ -114,7 +114,7 @@ bool intercalate(Tape *tapes, int block_index, bool is_intercalated,
     if (is_intercalated)
       disp = HALF_TAPES_SZ;
 
-    Register reg = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    Register reg;
     int index = find_min_register(&reg, registers, reg_indexes, perf);
 
     fwrite(&reg, sizeof(Register), 1, tapes[write_tape_index].file);
@@ -173,7 +173,7 @@ bool balanced_intercalation(char const *out_filename, Tape *tapes,
       fread(&trash, sizeof(int), 1, tapes[i].file);
 
       while (fread(&reg, sizeof(Register), 1, tapes[i].file)) {
-        fprintf(txt_file, "%ld %f %s\n", reg.id, reg.grade, reg.content);
+        fprintf(txt_file, "%08zu %04.1f %s", reg.id, reg.grade, reg.content);
       }
     }
   }

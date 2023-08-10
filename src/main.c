@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
     if (input.should_print)
       print_bin("tmp/provao_cp.bin");
     sprintf(out_filename, "out/method-1/output-%lu.txt", time(NULL));
-    internal_intercalation(input.method, "tmp/provao_cp.bin", out_filename,
-                           &sort_performance, &file_performance);
+    internal_intercalation("tmp/provao_cp.bin", out_filename, &sort_performance,
+                           &file_performance);
     break;
   case EXTERNAL_INTERCALATION:
     cp_file_sized(filename, "tmp/provao_cp.bin", input.quantity);
@@ -73,8 +73,6 @@ int main(int argc, char **argv) {
                &file_performance);
     break;
   }
-  bin_to_txt("tmp/provao_cp.bin", "out/provao_out.txt", input.quantity,
-             &file_performance);
 
   if (input.should_print)
     print_txt(out_filename);
