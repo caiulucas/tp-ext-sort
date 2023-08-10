@@ -8,13 +8,13 @@
 #include <time.h>
 
 bool should_intercalate(Tape *tapes, bool is_intercalated) {
-  size_t blocks_size = 0;
-  size_t index = 0;
+  int blocks_size = 0;
+  int index = 0;
 
   if (is_intercalated)
     index = HALF_TAPES_SZ;
 
-  for (size_t i = index; i < index + (HALF_TAPES_SZ); i++) {
+  for (int i = index; i < index + (HALF_TAPES_SZ); i++) {
     blocks_size += tapes[i].block_size;
 
     if (blocks_size > 1)
@@ -26,7 +26,7 @@ bool should_intercalate(Tape *tapes, bool is_intercalated) {
 
 int find_min_register(Register *reg, Register *registers, int *reg_indexes,
                       Performance *perf) {
-  int index;
+  int index = 0;
 
   for (int i = 0; i < TAPES_SZ; i++) {
     if (reg_indexes[i] > 0) {
@@ -37,10 +37,8 @@ int find_min_register(Register *reg, Register *registers, int *reg_indexes,
 
   for (int i = index + 1; i < BLOCK_SZ; i++) {
     perf->comparisons_count += 1;
-
-    if (registers[i].grade < registers[index].grade && reg_indexes[i] > 0) {
+    if (registers[i].grade < registers[index].grade && reg_indexes[i] > 0)
       index = i;
-    }
   }
 
   *reg = registers[index];
@@ -48,7 +46,7 @@ int find_min_register(Register *reg, Register *registers, int *reg_indexes,
 }
 
 bool has_valid_register(int *reg_indexes) {
-  for (int i = 0; i < (HALF_TAPES_SZ); i++) {
+  for (int i = 0; i < HALF_TAPES_SZ; i++) {
     if (reg_indexes[i] == 1)
       return true;
   }
@@ -61,23 +59,23 @@ bool intercalate(Tape *tapes, int block_index, bool is_intercalated,
   int reg_indexes[HALF_TAPES_SZ];
   int aux_indexes[HALF_TAPES_SZ];
 
-  for (int i = 0; i < (HALF_TAPES_SZ); i++) {
+  for (int i = 0; i < HALF_TAPES_SZ; i++) {
     reg_indexes[i] = 0;
   }
 
   Register registers[BLOCK_SZ];
 
-  size_t write_tape_index = (((block_index - 1) % (HALF_TAPES_SZ)));
+  int write_tape_index = (((block_index - 1) % (HALF_TAPES_SZ)));
 
   if (!is_intercalated)
     write_tape_index += HALF_TAPES_SZ;
 
-  size_t index_input_tapes = 0;
+  int index_input_tapes = 0;
 
   if (is_intercalated)
     index_input_tapes = HALF_TAPES_SZ;
 
-  for (size_t i = index_input_tapes; i < index_input_tapes + (HALF_TAPES_SZ);
+  for (int i = index_input_tapes; i < index_input_tapes + (HALF_TAPES_SZ);
        i++) {
     if (tapes[i].block_size < block_index) {
       aux_indexes[i] = 0;
@@ -116,7 +114,7 @@ bool intercalate(Tape *tapes, int block_index, bool is_intercalated,
     if (is_intercalated)
       disp = HALF_TAPES_SZ;
 
-    Register reg;
+    Register reg = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     int index = find_min_register(&reg, registers, reg_indexes, perf);
 
     fwrite(&reg, sizeof(Register), 1, tapes[write_tape_index].file);
@@ -145,43 +143,42 @@ bool balanced_intercalation(char const *out_filename, Tape *tapes,
 
     reopen_tapes(tapes, is_intercalated);
 
-    size_t blocks_size = block_size(tapes, is_intercalated);
+    int blocks_size = block_size(tapes, is_intercalated);
 
-    for (size_t i = 0; i < blocks_size; i++) {
+    for (int i = 0; i < blocks_size; i++) {
       intercalate(tapes, i + 1, is_intercalated, perf);
       flush_tapes(tapes);
     }
 
     is_intercalated = !is_intercalated;
-
-    rewind_tapes(tapes);
-    flush_tapes(tapes);
   }
 
-  size_t tape_index = 0;
+  flush_tapes(tapes);
+  rewind_tapes(tapes);
+
+  int tape_index = 0;
 
   if (is_intercalated)
     tape_index += HALF_TAPES_SZ;
 
-  rewind_tapes(tapes);
+  FILE *txt_file = fopen(out_filename, "w");
 
-  for (size_t i = tape_index; i < tape_index + HALF_TAPES_SZ; i++) {
+  for (int i = tape_index; i < (tape_index + HALF_TAPES_SZ); i++) {
     if (tapes[i].block_size > 0) {
       Register reg;
-      FILE *txt_file = fopen(out_filename, "w");
+
+      rewind(tapes[i].file);
 
       int trash;
-      rewind(tapes[i].file);
       fread(&trash, sizeof(int), 1, tapes[i].file);
 
       while (fread(&reg, sizeof(Register), 1, tapes[i].file)) {
         fprintf(txt_file, "%ld %f %s\n", reg.id, reg.grade, reg.content);
       }
-
-      break;
     }
   }
 
+  fclose(txt_file);
   close_tapes(tapes);
   return true;
 }

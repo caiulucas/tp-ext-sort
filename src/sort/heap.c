@@ -1,10 +1,10 @@
-#include "heap-sort.h"
+#include "heap.h"
 
 bool compare(HeapRegister *reg_1, HeapRegister *reg_2, Performance *perf) {
-  perf->comparisons_count += 1;
-  if ((!reg_1->tagged && reg_2->tagged) || reg_1->reg.grade < reg_2->reg.grade)
-    return false;
-  return true;
+  if (reg_1->tagged != reg_2->tagged)
+    return reg_2->tagged;
+
+  return reg_1->reg.grade > reg_2->reg.grade;
 }
 
 void rebuild_heap(HeapRegister *registers, int left, int right,

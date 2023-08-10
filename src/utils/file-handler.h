@@ -29,3 +29,5 @@ bool cp_file(char const *origin_filename, char const *destination_file_name);
 // Copy n registers of a file to another
 bool cp_file_sized(char const *origin_filename,
                    char const *destination_file_name, size_t size);
+
+void print_txt(char const *txt_filename);

@@ -8,4 +8,5 @@ typedef struct Input {
   size_t quantity;
   Method method;
   Situation situation;
+  bool should_print;
 } Input;

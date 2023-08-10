@@ -3,5 +3,5 @@
 #include "../models/performance.h"
 #include "../models/tape.h"
 
-void external_intercalation(Method method, char const *filename,
-                            Performance *file_perf, Performance *sort_perf);
+void external_intercalation(char const *filename, char const *out_filename,
+                            Performance *sort_perf, Performance *file_perf);

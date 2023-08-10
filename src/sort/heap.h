@@ -17,7 +17,5 @@ typedef struct Heap {
 
 void init_heap(Heap *heap, Performance *perf);
 
-void heap_sort(Register *registers, int n);
-
 void rebuild_heap(HeapRegister *heap_registers, int left, int right,
                   Performance *perf);

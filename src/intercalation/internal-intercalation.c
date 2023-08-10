@@ -19,28 +19,29 @@ void internal_sort(char const *filename, Tape *tapes, Performance *perf) {
   Block block;
   size_t tape_index = 0;
 
+  perf->reads_count += 1;
   block.registers_count =
       fread(block.registers, sizeof(Register), BLOCK_SZ, file);
-  perf->reads_count += 1;
 
   merge_sort(block.registers, 0, block.registers_count - 1, perf);
 
   while (block.registers_count > 0) {
+    perf->reads_count += 1;
     block.registers_count =
         fread(block.registers, sizeof(Register), BLOCK_SZ, file);
-    perf->reads_count += 1;
 
     merge_sort(block.registers, 0, block.registers_count - 1, perf);
 
     if (block.registers_count > 0) {
-      add_block(&tapes[tape_index % BLOCK_SZ], &block, perf);
+      add_block(&tapes[tape_index % HALF_TAPES_SZ], &block, perf);
       tape_index++;
     }
   }
 }
 
 void internal_intercalation(Method method, char const *filename,
-                            Performance *file_perf, Performance *sort_perf) {
+                            char const *out_filename, Performance *sort_perf,
+                            Performance *file_perf) {
   Tape tapes[TAPES_SZ];
   init_tapes(tapes, "tapes/tape");
 
@@ -52,7 +53,7 @@ void internal_intercalation(Method method, char const *filename,
       (double)(end_clock - start_clock) / CLOCKS_PER_SEC;
 
   start_clock = clock();
-  balanced_intercalation("out/internal.txt", tapes, file_perf);
+  balanced_intercalation(out_filename, tapes, file_perf);
   end_clock = clock();
 
   file_perf->execution_time =

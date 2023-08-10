@@ -5,4 +5,5 @@
 #include "../models/tape.h"
 
 void internal_intercalation(Method method, char const *filename,
-                            Performance *file_perf, Performance *sort_perf);
+                            char const *out_filename, Performance *sort_perf,
+                            Performance *file_perf);

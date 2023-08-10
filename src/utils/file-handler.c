@@ -71,10 +71,12 @@ void print_bin(char const *filename) {
 
   Register reg;
 
-  info_msg("Printing file...");
+  printf("\n");
+  info_msg("Printing file...\n");
   while (fread(&reg, sizeof(Register), 1, bin_file)) {
     printf("%zu %lf %s\n", reg.id, reg.grade, reg.content);
   }
+  printf("\n");
 
   fclose(bin_file);
 }
@@ -224,7 +226,7 @@ bool cp_file_sized(char const *origin_filename,
   FILE *origin_file = fopen(origin_filename, "rb");
 
   if (!origin_file) {
-    error_msg("Unable to open origin file.");
+    error_msg("Unable to open origin file.\n");
     return false;
   }
 
@@ -233,7 +235,7 @@ bool cp_file_sized(char const *origin_filename,
   FILE *destination_file = fopen(destination_filename, "wb");
 
   if (!destination_file) {
-    error_msg("Unable to open destination file.");
+    error_msg("Unable to open destination file.\n");
     return false;
   }
 
@@ -249,5 +251,19 @@ bool cp_file_sized(char const *origin_filename,
   char msg[100];
   sprintf(msg, "Copied %s to %s\n", origin_filename, destination_filename);
   success_msg(msg);
+
+  fclose(origin_file);
+  fclose(destination_file);
   return true;
+}
+
+void print_txt(char const *txt_filename) {
+  FILE *txt_file = fopen(txt_filename, "r");
+  char line[120];
+
+  while (fgets(line, 100, txt_file)) {
+    printf("%s", line);
+  }
+
+  fclose(txt_file);
 }
